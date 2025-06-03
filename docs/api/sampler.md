@@ -161,13 +161,13 @@ Those structure hold the state of the sampler.
 They are experimental, meaning that we could change them at some point, and we actively seeking for feedback and opinions on their usage and APIs.
 
 ```{eval-rst}
-.. currentmodule:: netket.experimental.sampler
+.. currentmodule:: netket.sampler
 
 ```
 
 ### Particle-specific samplers
 
-The following samplers are for 2nd-quantisation fermionic hilbert spaces ({class}`netket.experimental.hilbert.SpinOrbitalFermions`).
+The following samplers are for 2nd-quantisation fermionic hilbert spaces ({class}`netket.hilbert.SpinOrbitalFermions`).
 
 ```{eval-rst}
 .. autosummary::
