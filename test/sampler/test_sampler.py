@@ -25,7 +25,8 @@ from jax.nn.initializers import normal
 
 import netket as nk
 from netket import config
-from netket.hilbert import DiscreteHilbert, Particle
+from netket.hilbert import DiscreteHilbert
+from netket.experimental.hilbert import Particle
 from netket.utils import array_in, mpi
 from netket.jax.sharding import device_count_per_rank
 

@@ -136,8 +136,6 @@ def vstate(request, model, chunk_size):
 
     vstate.chunk_size = chunk_size
 
-    return vstate
-
 
 def is_complex_failing(vstate, qgt_partial):
     """
@@ -381,8 +379,6 @@ def test_qgt_holomorphic_real_pars_throws():
         vstate.quantum_geometric_tensor(qgt.QGTJacobianPyTree(holomorphic=True))
     with pytest.raises(nk.errors.IllegalHolomorphicDeclarationForRealParametersError):
         vstate.quantum_geometric_tensor(qgt.QGTJacobianDense(holomorphic=True))
-
-    return vstate
 
 
 def test_qgt_onthefly_correct_chunking_selection():

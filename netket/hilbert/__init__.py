@@ -34,11 +34,9 @@ from . import random
 
 # Deprecated bindings
 from .custom_hilbert import CustomHilbert as _deprecated_CustomHilbert
-from netket.experimental.hilbert import (
-    Particle as _exp_Particle,
-    ContinuousHilbert as _exp_ContinuousHilbert,
-)
 from netket.utils.deprecation import deprecation_getattr as _deprecation_getattr
+import importlib
+import warnings
 
 _deprecations = {
     # September 2024, NetKet 3.14
@@ -47,20 +45,25 @@ _deprecations = {
         "existing hilbert spaces instead, or define your own hilbert space class.",
         _deprecated_CustomHilbert,
     ),
-    # June 2025
-    "Particle": (
-        "netket.hilbert.Particle is deprecated: use netket.experimental.hilbert.Particle",
-        _exp_Particle,
-    ),
-    "ContinuousHilbert": (
-        "netket.hilbert.ContinuousHilbert is deprecated: use netket.experimental.hilbert.ContinuousHilbert",
-        _exp_ContinuousHilbert,
-    ),
 }
 
 
-__getattr__ = _deprecation_getattr(__name__, _deprecations)
-del _deprecation_getattr
+def __getattr__(name):
+    if name == "Particle":
+        warnings.warn(
+            "netket.hilbert.Particle is deprecated: use netket.experimental.hilbert.Particle",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(importlib.import_module("netket.experimental.hilbert"), name)
+    if name == "ContinuousHilbert":
+        warnings.warn(
+            "netket.hilbert.ContinuousHilbert is deprecated: use netket.experimental.hilbert.ContinuousHilbert",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(importlib.import_module("netket.experimental.hilbert"), name)
+    return _deprecation_getattr(__name__, _deprecations)(name)
 
 
 from netket.utils import _hide_submodules

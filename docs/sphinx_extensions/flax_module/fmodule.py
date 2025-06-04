@@ -69,36 +69,34 @@ def render_module(modname: str, qualname: str, app):
     recursive = False
     context = {}
     params = inspect.signature(ag.generate_autosummary_content).parameters
+
+    kwargs = dict(
+        name=qualname,
+        obj=obj,
+        parent=parent,
+        template=template,
+        template_name=template_name,
+        imported_members=imported_members,
+    )
+
+    if "app" in params:
+        kwargs["app"] = app
+    if "recursive" in params:
+        kwargs["recursive"] = recursive
+    if "context" in params:
+        kwargs["context"] = context
+    if "modname" in params:
+        kwargs["modname"] = modname
+    if "qualname" in params:
+        kwargs["qualname"] = qualname
     if "config" in params:
-        return ag.generate_autosummary_content(
-            qualname,
-            obj,
-            parent,
-            template,
-            template_name,
-            imported_members,
-            recursive=recursive,
-            context=context,
-            modname=modname,
-            qualname=qualname,
-            config=app.config,
-            events=app.events,
-            registry=app.registry,
-        )
-    else:
-        return ag.generate_autosummary_content(
-            qualname,
-            obj,
-            parent,
-            template,
-            template_name,
-            imported_members,
-            app,
-            recursive,
-            context,
-            modname,
-            qualname,
-        )
+        kwargs["config"] = app.config
+    if "events" in params:
+        kwargs["events"] = app.events
+    if "registry" in params:
+        kwargs["registry"] = app.registry
+
+    return ag.generate_autosummary_content(**kwargs)
 
 
 class FlaxModuleDirective(SphinxDirective):
