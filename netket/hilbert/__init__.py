@@ -19,13 +19,11 @@ from .abstract_hilbert import AbstractHilbert
 from .discrete_hilbert import DiscreteHilbert
 from .homogeneous import HomogeneousHilbert
 
-from .continuous_hilbert import ContinuousHilbert
 
 from .doubled_hilbert import DoubledHilbert
 from .spin import Spin
 from .fock import Fock
 from .qubit import Qubit
-from .particle import Particle
 from .spin_orbital_fermions import SpinOrbitalFermions
 
 from .tensor_hilbert import TensorHilbert
@@ -36,6 +34,11 @@ from . import random
 
 # Deprecated bindings
 from .custom_hilbert import CustomHilbert as _deprecated_CustomHilbert
+from netket.experimental.hilbert import (
+    Particle as _exp_Particle,
+    ContinuousHilbert as _exp_ContinuousHilbert,
+)
+from netket.utils.deprecation import deprecation_getattr as _deprecation_getattr
 
 _deprecations = {
     # September 2024, NetKet 3.14
@@ -44,12 +47,22 @@ _deprecations = {
         "existing hilbert spaces instead, or define your own hilbert space class.",
         _deprecated_CustomHilbert,
     ),
+    # June 2025
+    "Particle": (
+        "netket.hilbert.Particle is deprecated: use netket.experimental.hilbert.Particle",
+        _exp_Particle,
+    ),
+    "ContinuousHilbert": (
+        "netket.hilbert.ContinuousHilbert is deprecated: use netket.experimental.hilbert.ContinuousHilbert",
+        _exp_ContinuousHilbert,
+    ),
 }
 
-from netket.utils.deprecation import deprecation_getattr as _deprecation_getattr
-from netket.utils import _hide_submodules
 
 __getattr__ = _deprecation_getattr(__name__, _deprecations)
-_hide_submodules(__name__)
-
 del _deprecation_getattr
+
+
+from netket.utils import _hide_submodules
+
+_hide_submodules(__name__)
