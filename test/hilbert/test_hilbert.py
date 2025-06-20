@@ -27,6 +27,7 @@ from netket.hilbert import (
     Qubit,
     Spin,
 )
+import netket.experimental as nkx
 from netket.experimental.hilbert import Particle
 from netket.utils import StaticRange
 
@@ -128,18 +129,27 @@ hilberts["SpinOrbitalFermions (higherspin)"] = nk.hilbert.SpinOrbitalFermions(
 
 # Continuous space
 # no pbc
-geo_default = nk.experimental.geometry.Cell(d=2, L=(np.inf, 10.0), pbc=(False, True))
-hilberts["ContinuousSpaceHilbert"] = nk.experimental.hilbert.Particle(
-    N=5, geometry=geo_default
+geo_default = nkx.geometry.Cell(d=2, L=(np.inf, 10.0), pbc=(False, True))
+part = nkx.hilbert.Particle(geometry=geo_default)
+hilberts["ContinuousSpaceHilbert"] = nkx.hilbert.ParticleSet(
+    [nkx.hilbert.Electron() for _ in range(5)],
+    geo_default,
 )
-hilberts["TensorContinuous"] = nk.experimental.hilbert.Particle(
-    N=2, geometry=geo_default
-) * nk.experimental.hilbert.Particle(N=3, geometry=geo_default)
+hilberts["TensorContinuous"] = nkx.hilbert.ParticleSet(
+    [nkx.hilbert.Electron() for _ in range(2)],
+    geo_default,
+) * nkx.hilbert.ParticleSet(
+    [nkx.hilbert.Electron() for _ in range(3)],
+    geo_default,
+)
 
 
 N = 10
-hilberts["ContinuousHelium"] = nk.experimental.hilbert.Particle(
-    N=N, geometry=nk.experimental.geometry.Cell(d=1, L=(N / (0.3 * 2.9673),), pbc=True)
+cell_helium = nkx.geometry.Cell(d=1, L=(N / (0.3 * 2.9673),), pbc=True)
+helium = nkx.hilbert.Particle(geometry=cell_helium, mass=4.0, charge=0.0)
+hilberts["ContinuousHelium"] = nkx.hilbert.ParticleSet(
+    [helium for _ in range(N)],
+    cell_helium,
 )
 
 all_hilbert_params = [pytest.param(hi, id=name) for name, hi in hilberts.items()]
@@ -181,9 +191,7 @@ def test_consistent_size_homogeneous(hi: HomogeneousHilbert):
 @pytest.mark.parametrize("hi", particle_hilbert_params)
 def test_consistent_size_particle(hi: Particle):
     assert hi.size > 0
-    assert hi.n_particles > 0
-    assert hi.n_particles == sum(hi.n_per_spin)
-    assert len(hi.domain) == (hi.size // hi.n_particles)
+    assert len(hi.domain) == hi.size
 
 
 @pytest.mark.parametrize("hi", discrete_hilbert_params)
@@ -244,8 +252,9 @@ def test_random_states_particle(hi: Particle):
 
     # check that boundary conditions are fulfilled if any are given
     state = hi.random_state(jax.random.PRNGKey(13))
-    boundary = jnp.array(hi.n_particles * hi.geometry.pbc)
-    Ls = jnp.array(hi.n_particles * hi.domain)
+    n_particles = hi.n_particles
+    boundary = jnp.array(n_particles * hi.geometry.pbc)
+    Ls = jnp.array(n_particles * hi.domain)
     extension = jnp.where(jnp.equal(boundary, False), jnp.inf, Ls)
 
     assert jnp.sum(
@@ -256,7 +265,6 @@ def test_random_states_particle(hi: Particle):
 def test_particle_fail():
     with pytest.raises(ValueError):
         _ = Particle(
-            N=5,
             geometry=nk.experimental.geometry.Cell(d=2, L=(jnp.inf, 2.0), pbc=True),
         )
 
@@ -675,7 +683,7 @@ def test_tensor_combination():
     assert len(hit._hilbert_spaces) == 5
     assert isinstance(repr(hit), str)
 
-    hi3 = nk.experimental.hilbert.Particle(N=5, geometry=geo_default)
+    hi3 = nkx.hilbert.ParticleSet([part] * 5, geo_default)
     hit2 = hi1 * hi3
     assert isinstance(hit2, nk.hilbert.TensorHilbert)
     assert hit2.size == hi1.size + hi3.size
@@ -730,9 +738,7 @@ def test_tensor_combination():
     assert len(hit._hilbert_spaces) == 1
     assert isinstance(repr(hit), str)
 
-    hit = nk.hilbert.TensorHilbert(
-        nk.experimental.hilbert.Particle(N=5, geometry=geo_default)
-    )
+    hit = nk.hilbert.TensorHilbert(nkx.hilbert.ParticleSet([part] * 5, geo_default))
     assert isinstance(hit, nk.hilbert._tensor_hilbert.TensorGenericHilbert)
     assert len(hit._hilbert_spaces) == 1
     assert isinstance(repr(hit), str)
@@ -745,7 +751,7 @@ def test_errors():
     with pytest.raises(TypeError):
         hi * 1
 
-    hi = nk.experimental.hilbert.Particle(N=5, geometry=geo_default)
+    hi = nkx.hilbert.ParticleSet([part] * 5, geo_default)
     with pytest.raises(TypeError):
         1 * hi
     with pytest.raises(TypeError):
@@ -778,9 +784,11 @@ def test_constrained_eq_hash():
 
 
 def test_particle_with_geometry():
-    geo = nk.experimental.geometry.Cell(d=2, L=(np.inf, 10.0), pbc=(False, True))
-    hi1 = nk.experimental.hilbert.Particle(N=5, geometry=geo)
-    hi2 = nk.experimental.hilbert.Particle(N=5, geometry=geo_default)
+    geo = nkx.geometry.Cell(d=2, L=(np.inf, 10.0), pbc=(False, True))
+    hi1 = nkx.hilbert.ParticleSet([nkx.hilbert.Electron() for _ in range(5)], geo)
+    hi2 = nkx.hilbert.ParticleSet(
+        [nkx.hilbert.Electron() for _ in range(5)], geo_default
+    )
     assert hi1 == hi2
     geo2 = nk.experimental.geometry.Cell(d=1, L=1.0, pbc=True)
     assert np.isclose(geo2.distance([0.1], [0.9]), 0.2)
