@@ -139,6 +139,6 @@ class MetropolisRule(struct.Pytree):
             sampler_state: The current state of the sampler. Should not modify it.
             key: The PRNGKey to use to generate the random state.
         """
-        return sampler.hilbert.random_state(
+        return sampler.hilbert.random_state_array(
             key, size=sampler.n_batches, dtype=sampler.dtype
         )
