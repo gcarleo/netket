@@ -170,8 +170,7 @@ class AbstractHilbert(abc.ABC):
     def ravel_state(self, state) -> jnp.ndarray:
         """Flattens a PyTree configuration into a 1D array.
 
-        The default implementation assumes ``state`` is already a JAX array and
-        simply returns :func:`jax.numpy.asarray` applied to it.
+        Uses :func:`jax.flatten_util.ravel_pytree` to support arbitrary PyTrees.
 
         Args:
             state: PyTree representing a configuration.
@@ -180,12 +179,14 @@ class AbstractHilbert(abc.ABC):
             A ``jax.Array`` with shape ``(self.size,)``.
         """
 
-        return jnp.asarray(state)
+        flat, self._unravel_fn = jax.flatten_util.ravel_pytree(state)
+        return flat
 
     def unravel_state(self, flat: jnp.ndarray):
         """Inverse of :func:`ravel_state`.
 
-        The default implementation just returns ``flat``.
+        If :func:`ravel_state` has not been called before, this method simply
+        returns ``flat``.
 
         Args:
             flat: The flattened representation of a configuration.
@@ -194,7 +195,10 @@ class AbstractHilbert(abc.ABC):
             The input, interpreted as a PyTree configuration.
         """
 
-        return flat
+        unravel = getattr(self, "_unravel_fn", None)
+        if unravel is None:
+            return flat
+        return unravel(flat)
 
     def random_state_array(
         self, key: PRNGKeyT = None, size: int | None = None, dtype=None
