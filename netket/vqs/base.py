@@ -328,18 +328,9 @@ class VariationalState(abc.ABC):
         qutip = import_optional_dependency("qutip", descr="to_qobj")
 
         q_dims = [list(self.hilbert.shape), [1 for _ in range(self.hilbert.size)]]
-        qobj = qutip.Qobj(np.asarray(self.to_array()), dims=q_dims)
 
-        class _Dims:
-            def __init__(self, dims, dtype="ket"):
-                self._dims = dims
-                self.type = dtype
-
-            def as_list(self):
-                return self._dims
-
-        qobj._dims = _Dims(q_dims, "ket")
-        return qobj
+        qutip.settings.core["auto_tidyup_dims"] = False
+        return qutip.Qobj(np.asarray(self.to_array()), dims=q_dims)
 
 
 class VariationalMixedState(VariationalState):
@@ -376,18 +367,9 @@ class VariationalMixedState(VariationalState):
 
         hilbert: DiscreteHilbert = self.hilbert_physical  # type: ignore
         q_dims = [list(hilbert.shape), list(hilbert.shape)]
-        qobj = qutip.Qobj(np.asarray(self.to_matrix()), dims=q_dims)
 
-        class _Dims:
-            def __init__(self, dims, dtype="oper"):
-                self._dims = dims
-                self.type = dtype
-
-            def as_list(self):
-                return self._dims
-
-        qobj._dims = _Dims(q_dims, "oper")
-        return qobj
+        qutip.settings.core["auto_tidyup_dims"] = False
+        return qutip.Qobj(np.asarray(self.to_matrix()), dims=q_dims)
 
 
 @dispatch.abstract
