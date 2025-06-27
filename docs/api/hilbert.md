@@ -101,6 +101,9 @@ When defining a new Hilbert space, you must define how to uniformly sample the b
 
    random.flip_state
    random.random_state
+   AbstractHilbert.ravel_state
+   AbstractHilbert.unravel_state
+   AbstractHilbert.random_state_array
    index.optimalConstrainedHilbertindex
 ```
 

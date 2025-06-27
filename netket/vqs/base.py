@@ -327,7 +327,9 @@ class VariationalState(abc.ABC):
 
         qutip = import_optional_dependency("qutip", descr="to_qobj")
 
-        q_dims = [list(self.hilbert.shape), [1 for i in range(self.hilbert.size)]]
+        q_dims = [list(self.hilbert.shape), [1 for _ in range(self.hilbert.size)]]
+
+        qutip.settings.core["auto_tidyup_dims"] = False
         return qutip.Qobj(np.asarray(self.to_array()), dims=q_dims)
 
 
@@ -365,6 +367,8 @@ class VariationalMixedState(VariationalState):
 
         hilbert: DiscreteHilbert = self.hilbert_physical  # type: ignore
         q_dims = [list(hilbert.shape), list(hilbert.shape)]
+
+        qutip.settings.core["auto_tidyup_dims"] = False
         return qutip.Qobj(np.asarray(self.to_matrix()), dims=q_dims)
 
 

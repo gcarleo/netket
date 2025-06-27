@@ -21,6 +21,7 @@ from typing_extensions import Self
 from netket.utils.types import PRNGKeyT
 
 
+import jax
 import jax.numpy as jnp
 
 
@@ -81,9 +82,9 @@ class AbstractHilbert(abc.ABC):
             [[0 0]
              [0 0]]
         """
-        from netket.hilbert import random
-
-        return random.random_state(self, key, size, dtype=dtype)
+        return self.unravel_state(
+            self.random_state_array(key=key, size=size, dtype=dtype)
+        )
 
     def ptrace(self, sites: int | Sequence[int]) -> Self | None:
         """Returns the hilbert space without the selected sites.
@@ -166,3 +167,45 @@ class AbstractHilbert(abc.ABC):
             self._hash = hash(self._attrs)
 
         return self._hash
+
+    def ravel_state(self, state) -> jnp.ndarray:
+        """Flattens a PyTree configuration into a 1D array.
+
+        Uses :func:`jax.flatten_util.ravel_pytree` to support arbitrary PyTrees.
+
+        Args:
+            state: PyTree representing a configuration.
+
+        Returns:
+            A ``jax.Array`` with shape ``(self.size,)``.
+        """
+
+        flat, self._unravel_fn = jax.flatten_util.ravel_pytree(state)
+        return flat
+
+    def unravel_state(self, flat: jnp.ndarray):
+        """Inverse of :func:`ravel_state`.
+
+        If :func:`ravel_state` has not been called before, this method simply
+        returns ``flat``.
+
+        Args:
+            flat: The flattened representation of a configuration.
+
+        Returns:
+            The input, interpreted as a PyTree configuration.
+        """
+
+        unravel = getattr(self, "_unravel_fn", None)
+        if unravel is None:
+            return flat
+        return unravel(flat)
+
+    def random_state_array(
+        self, key: PRNGKeyT = None, size: int | None = None, dtype=None
+    ) -> jnp.ndarray:
+        """Like :func:`random_state` but always returns a 1D JAX array."""
+
+        from netket.hilbert import random
+
+        return random.random_state(self, key, size, dtype=dtype)

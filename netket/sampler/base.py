@@ -331,13 +331,23 @@ class Sampler(struct.Pytree):
         if state is None:
             state = self.reset(machine, parameters)
 
-        return self._sample_chain(
+        samples, state = self._sample_chain(
             wrap_afun(machine),
             parameters,
             state,
             chain_length,
             return_log_probabilities=return_log_probabilities,
         )
+
+        if return_log_probabilities:
+            samples = (
+                self.hilbert.unravel_state(samples[0]),
+                samples[1],
+            )
+        else:
+            samples = self.hilbert.unravel_state(samples)
+
+        return samples, state
 
     def samples(
         self,
@@ -364,7 +374,7 @@ class Sampler(struct.Pytree):
 
         for _i in range(chain_length):
             samples, state = self._sample_chain(machine, parameters, state, 1)
-            yield samples[:, 0, :]
+            yield self.hilbert.unravel_state(samples[:, 0, :])
 
     @abc.abstractmethod
     def _sample_chain(
