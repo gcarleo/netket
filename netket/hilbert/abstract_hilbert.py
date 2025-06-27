@@ -21,6 +21,7 @@ from typing_extensions import Self
 from netket.utils.types import PRNGKeyT
 
 
+import jax
 import jax.numpy as jnp
 
 
