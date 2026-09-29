@@ -67,3 +67,11 @@ Complex mode doubles the sample-space dimension, so this also produces a
 operations. Comparing the two modes probes whether earlier model evaluation
 initializes the dense-library operations subsequently needed by SR. This
 is a diagnostic hypothesis, not an established explanation of a stall.
+
+An optional `--initialize-sr` control evaluates the actual Jacobian and
+Gram in separate, completed stages, then calls the standard solver on a
+same-sized identity matrix. It verifies that variational parameters are
+unchanged and records startup time before entering the intact driver.
+Compare this flag against the default in fresh processes using the same
+source and configuration. This is a diagnostic initialization experiment,
+not a library fix; its GPU validation is pending.
