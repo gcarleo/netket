@@ -36,10 +36,23 @@ Validation status with NetKet 3.22.3 and JAX/JAXlib 0.10.1:
 - The default case passes all three iterations on eight and sixteen GH200
   GPUs across two and four nodes, without a preliminary Gram or solver call.
   These configurations do not reproduce a stall.
-- The complex-valued GPU check is pending.
+- The complex-valued case below stalls before its first completed update
+  on eight GH200 GPUs across two nodes. All eight ranks reached
+  `before_first_update`. A Python stack is inside `VMC_SR`'s
+  `compute_loss_and_update`; a rank-0 native snapshot waits in
+  `cuLaunchKernel`, reached through `cusolverDnXpotrf` / `cusolverDnDpotrf`
+  and JAX's Potrf FFI. Two NCCL RAS snapshots 76 seconds apart show rank 0
+  one AllGather and one AllReduce ahead of the other seven ranks on one
+  communicator. This reproduces a distributed SR stall, but does not
+  establish whether its root cause is in NetKet, XLA or CUDA. The bounded
+  allocation timed out after 264 seconds without a completed update.
 
-There is no library modification in this branch. A failure must first be
-reproduced with this standalone model before it can validate a proposed fix.
+The GPU environment for these observations uses CUDA runtime 13.4, driver
+580.159.04 and NCCL 2.32.3. These observations do not establish a failure on
+other GPU architectures or library versions.
+
+There is no library modification in this branch. A proposed correction
+still needs validation against this standalone failing configuration.
 
 The standard complex-valued RBM is another useful control:
 
