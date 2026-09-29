@@ -74,4 +74,14 @@ same-sized identity matrix. It verifies that variational parameters are
 unchanged and records startup time before entering the intact driver.
 Compare this flag against the default in fresh processes using the same
 source and configuration. This is a diagnostic initialization experiment,
-not a library fix; its GPU validation is pending.
+not a library fix.
+
+On eight GH200 GPUs with the versions above, the initialized complex RBM
+completed all three standard driver updates. All ranks agreed on the
+initialized Gram hash and passed parameter-preservation checks. Maximum
+startup initialization time was 7.671 seconds, including sample and energy
+evaluation. The two subsequent updates took at most 0.380 and 0.328 seconds
+across ranks; these short diagnostic timings are not a performance study.
+The small four-device CPU initialization check also passes. A cold repeat
+using the same source timed out after 252 allocation seconds without any
+completed update. The two GPU controls ran in separate allocations.
