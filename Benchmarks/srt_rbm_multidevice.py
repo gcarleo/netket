@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--distributed", action="store_true")
 parser.add_argument("--length", type=int, default=16)
 parser.add_argument("--alpha", type=int, default=8)
+parser.add_argument("--complex-parameters", action="store_true")
 parser.add_argument("--samples", type=int, default=4096)
 parser.add_argument("--chains", type=int, default=512)
 parser.add_argument("--chunk", type=int, default=128)
@@ -48,6 +49,7 @@ record = {
     "samples": args.samples,
     "chains": args.chains,
     "chunk": args.chunk,
+    "complex_parameters": args.complex_parameters,
     "complete": False,
     "steps": [],
 }
@@ -62,7 +64,10 @@ def report(stage):
 graph = nk.graph.Hypercube(length=args.length, n_dim=2, pbc=True)
 hilbert = nk.hilbert.Spin(s=0.5, N=graph.n_nodes)
 hamiltonian = nk.operator.IsingJax(hilbert, graph, h=3.0)
-model = nk.models.RBM(alpha=args.alpha, param_dtype=jnp.float64)
+model = nk.models.RBM(
+    alpha=args.alpha,
+    param_dtype=jnp.complex128 if args.complex_parameters else jnp.float64,
+)
 sampler = nk.sampler.MetropolisLocal(hilbert, n_chains=args.chains, sweep_size=1)
 state = nk.vqs.MCState(
     sampler,
@@ -81,7 +86,7 @@ driver = nk.driver.VMC_SR(
     diag_shift=1e-4,
     use_ntk=True,
     on_the_fly=False,
-    mode="real",
+    mode="complex" if args.complex_parameters else "real",
     chunk_size_bwd=args.chunk,
     linear_solver=nk.optimizer.solver.cholesky_with_fallback,
 )
